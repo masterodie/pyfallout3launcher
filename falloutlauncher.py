@@ -16,14 +16,18 @@ limitations under the License.
 """
 
 import argparse
+import logging
 import os
 import subprocess
 import sys
 
+import Tkinter as tk
+import ttk
+
 try:
     from msvcrt import getch
 except:
-    print('This program is for Windows only')
+    logging.error('This program is for Windows only')
     sys.exit(1)
 
 FALLOUT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -99,10 +103,17 @@ def parse_arguments():
                        help='Path to Fallout 3 Directory',
                        default=FALLOUT_PATH)
 
+    misc = parser.add_argument_group('Misc')
+    misc.add_argument('--loglevel', help='Log level', default="WARNING")
+
     return parser
 
 parser = parse_arguments()
 args = parser.parse_args()
+
+logging.basicConfig(filename='pyFallout3Launcher.log', level=getattr(logging,
+                                                                     args.loglevel.upper()))
+
 
 FALLOUT[1] = args.fo3_path
 FALLOUT_LAUNCHER[1] = args.launcher_path
@@ -121,16 +132,14 @@ def mod_organizer(app):
     if os.path.exists(mo) and (app != MOD_ORGANIZER and
                                app != FALLOUT_LAUNCHER):
             retval = (mo, '-p', args.profile, application)
-    print retval
+    loggig.debug(retval)
     return retval
 
 
 def run_app(app):
     fallout = os.path.join(FALLOUT_PATH, FALLOUT[1])
     if not os.path.exists(fallout):
-        print \
-            '''
-ERROR: Fallout 3 not found!
+        message = '''Fallout 3 not found!
 
 Please install this to your Fallout 3 directory!
 
@@ -139,21 +148,88 @@ Installation procedure:
     - Copy over falloutlauncher.exe your Fallout 3 directory
     - Run through steam :)
 '''
+        logging.error('Fallout 3 Not found. Refer to README.md')
 
-        sys.exit(1)
+        return 2
     drive, path = os.path.splitdrive(app[1])
     if drive is None:
         path = os.path.join(FALLOUT_PATH, app[1])
     if os.path.exists(path):
         if args.use_mo:
             path = mod_organizer(app)
-        print "Running {}".format(app[0])
+        logging.info("Running {}".format(app[0]))
         subprocess.Popen(path)
-        sys.exit(0)
+        return 0
     else:
-        print "{} executable <{}> does not exist!".format(app[0], path)
-        parser.print_help()
-        sys.exit(1)
+        logging.error("{} executable <{}> does not exist!".format(app[0], path))
+        return 1
+
+class GUI(tk.Frame):
+    def __init__(self, master=None):
+        tk.Frame.__init__(self, master, padx=5, pady=4)
+        self.grid()
+        self.createWidgets()
+
+    def createWidgets(self):
+        top=self.winfo_toplevel()
+        top.rowconfigure(0, weight=1)
+        top.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+
+        self.titleLabel = ttk.Label(
+            self,
+            text='Fallout 3 Launcher',
+            font = 'Helvetica 14 bold'
+        )
+        self.titleLabel.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.fo3Button = ttk.Button(
+            self,
+            text=FALLOUT[0],
+            command=self.run_fo3,
+            width=25
+        )
+        self.fo3Button.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.launcherButton = ttk.Button(
+            self,
+            text=FALLOUT_LAUNCHER[0],
+            command=self.run_launcher,
+            width=25
+        )
+        self.launcherButton.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.foseButton = ttk.Button(
+            self,
+            text=FOSE[0],
+            command=self.run_fose,
+            width=25
+        )
+        self.foseButton.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.moButton = ttk.Button(
+            self,
+            text=MOD_ORGANIZER[0],
+            command=self.run_mo,
+            width=25
+        )
+        self.moButton.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.quitButton = ttk.Button(
+            self,
+            text='Quit',
+            command=self.quit,
+            width=25
+        )
+        self.quitButton.grid(pady=2, sticky=tk.S+tk.E+tk.W)
+
+    def run_fo3(self):
+        run_app(FALLOUT)
+
+    def run_launcher(self):
+        run_app(FALLOUT_LAUNCHER)
+
+    def run_fose(self):
+        run_app(FOSE)
+
+    def run_mo(self):
+        run_app(MOD_ORGANIZER)
 
 
 def user_input():
@@ -186,16 +262,20 @@ def user_input():
 
 def main():
 
-    if args.fo3:
-        run_app(FALLOUT)
-    elif args.launcher:
-        run_app(FALLOUT_LAUNCHER)
-    elif args.fose:
-        run_app(FOSE)
-    elif args.mo:
-        run_app(MOD_ORGANIZER)
-    else:
-        user_input()
+    #if args.fo3:
+        #run_app(FALLOUT)
+    #elif args.launcher:
+        #run_app(FALLOUT_LAUNCHER)
+    #elif args.fose:
+        #run_app(FOSE)
+    #elif args.mo:
+        #run_app(MOD_ORGANIZER)
+    #else:
+        #user_input()
+
+    app = GUI()
+    app.master.title('Fallout 3 Launcher')
+    app.mainloop()
 
 
 if __name__ == '__main__':
