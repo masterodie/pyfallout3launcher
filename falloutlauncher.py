@@ -20,14 +20,18 @@ import os
 import subprocess
 import sys
 
-from msvcrt import getch
+try:
+    from msvcrt import getch
+except:
+    print('This program is for Windows only')
+    sys.exit(1)
 
 FALLOUT_PATH = os.path.dirname(os.path.realpath(__file__))
-FALLOUT = ('Fallout 3', 'Fallout3.exe')
-FALLOUT_LAUNCHER = ('Launcher', 'FalloutLauncher_ORG.exe')
-FOSE = ('Fallout Script Extender', 'fose_loader.exe')
-MOD_ORGANIZER = ('Mod Organizer',
-                 os.path.join('ModOrganizer', 'ModOrganizer.exe'))
+FALLOUT = ['Fallout 3', 'Fallout3.exe']
+FALLOUT_LAUNCHER = ['Launcher', 'FalloutLauncher_ORG.exe']
+FOSE = ['Fallout Script Extender', 'fose_loader.exe']
+MOD_ORGANIZER = ['Mod Organizer',
+                 os.path.join('ModOrganizer', 'ModOrganizer.exe')]
 
 
 def parse_arguments():
@@ -37,29 +41,60 @@ def parse_arguments():
 
     prog = parser.add_mutually_exclusive_group()
     prog.add_argument(
-        '-launcher',
+        '--launcher',
         action='store_true',
         help='Start Fallout 3 Launcher <{}>'.format(FALLOUT_LAUNCHER[1]),
     )
     prog.add_argument(
-        '-fo3',
+        '--fo3',
         action='store_true',
         help='Start Fallout 3 <{}>'.format(FALLOUT[1]),
     )
     prog.add_argument(
-        '-fose',
+        '--fose',
         action='store_true',
         help='Start Fallout Script Extender <{}>'.format(FOSE[1]),
     )
     prog.add_argument(
-        '-mo',
+        '--mo',
         action='store_true',
         help='Start ModOrganizer <{}>'.format(MOD_ORGANIZER[1])
     )
+    parser.add_argument('--profile', help='The Mod Organizer Profile',
+                        default='Default')
+
+    parser.add_argument('--launcher-path',
+                        help='Path to original FalloutLauncher.exe',
+                        default=FALLOUT_LAUNCHER[1])
+    parser.add_argument('--fo3-path',
+                        help='Path to Fallout.exe',
+                        default=FALLOUT[1])
+    parser.add_argument('--fose-path',
+                        help='Path to fose_loader.exe',
+                        default=FOSE[1])
+    parser.add_argument('--mo-path',
+                        help='Path to ModOrganizer.exe',
+                        default=MOD_ORGANIZER[1])
+
     return parser
 
-
 parser = parse_arguments()
+args = parser.parse_args()
+
+FALLOUT[1] = args.fo3_path
+FALLOUT_LAUNCHER[1] = args.launcher_path
+FOSE[1] = args.fose_path
+MOD_ORGANIZER[1] = args.mo_path
+
+
+def mod_organizer(app):
+    mo = os.path.join(FALLOUT_PATH, MOD_ORGANIZER[1])
+    application = os.path.join(FALLOUT_PATH, app[1])
+    retval = application
+    if os.path.exists(mo) and app != MOD_ORGANIZER:
+            retval = (mo, '-p', args.profile, application)
+    print retval
+    return retval
 
 
 def run_app(app):
@@ -82,11 +117,12 @@ Installation procedure:
         sys.exit(1)
     path = os.path.join(FALLOUT_PATH, app[1])
     if os.path.exists(path):
+        path = mod_organizer(app)
         print "Running {}".format(app[0])
         subprocess.call(path)
         sys.exit(0)
     else:
-        print "{} <{}> does not exist!".format(app[0], path)
+        print "{} executable <{}> does not exist!".format(app[0], path)
         sys.exit(1)
 
 
@@ -115,8 +151,6 @@ def user_input():
 
 
 def main():
-
-    args = parser.parse_args()
 
     if args.fo3:
         run_app(FALLOUT)
