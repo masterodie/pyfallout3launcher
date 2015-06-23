@@ -34,16 +34,25 @@ MOD_ORGANIZER = ['Mod Organizer',
                  os.path.join('ModOrganizer', 'ModOrganizer.exe')]
 
 
+def str2bool(val):
+    return val.lower() in ('yes', 'true', 't', 'y', '1',)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Steam Fallout 3 Launcher replacement"
     )
 
+    parser.register('type', 'bool', str2bool)
+
+    launcher_warning = \
+        "(If launching through Mod Organizer this is only for configuration!)"
     prog = parser.add_mutually_exclusive_group()
     prog.add_argument(
         '--launcher',
         action='store_true',
-        help='Start Fallout 3 Launcher <{}>'.format(FALLOUT_LAUNCHER[1]),
+        help='Start Fallout 3 Launcher <{}> {}'.format(FALLOUT_LAUNCHER[1],
+                                                       launcher_warning),
     )
     prog.add_argument(
         '--fo3',
@@ -60,21 +69,35 @@ def parse_arguments():
         action='store_true',
         help='Start ModOrganizer <{}>'.format(MOD_ORGANIZER[1])
     )
-    parser.add_argument('--profile', help='The Mod Organizer Profile',
-                        default='Default')
 
-    parser.add_argument('--launcher-path',
-                        help='Path to original FalloutLauncher.exe',
-                        default=FALLOUT_LAUNCHER[1])
-    parser.add_argument('--fo3-path',
-                        help='Path to Fallout.exe',
-                        default=FALLOUT[1])
-    parser.add_argument('--fose-path',
-                        help='Path to fose_loader.exe',
-                        default=FOSE[1])
-    parser.add_argument('--mo-path',
-                        help='Path to ModOrganizer.exe',
-                        default=MOD_ORGANIZER[1])
+    modorganizer = parser.add_argument_group(
+        "Mod Organizer Specific Options"
+    )
+    modorganizer.add_argument('--profile', help='The Mod Organizer Profile',
+                              default='Default')
+    modorganizer.add_argument(
+        '--use-mo',
+        help='Launch FOSE and Fallout through Mod Organizer',
+        type='bool',
+        default=True,
+    )
+
+    paths = parser.add_argument_group("Application Paths")
+    paths.add_argument('--launcher-path',
+                       help='Path to original FalloutLauncher.exe',
+                       default=FALLOUT_LAUNCHER[1])
+    paths.add_argument('--fo3-path',
+                       help='Path to Fallout.exe',
+                       default=FALLOUT[1])
+    paths.add_argument('--fose-path',
+                       help='Path to fose_loader.exe',
+                       default=FOSE[1])
+    paths.add_argument('--mo-path',
+                       help='Path to ModOrganizer.exe',
+                       default=MOD_ORGANIZER[1])
+    paths.add_argument('--fallout-dir',
+                       help='Path to Fallout 3 Directory',
+                       default=FALLOUT_PATH)
 
     return parser
 
@@ -88,10 +111,15 @@ MOD_ORGANIZER[1] = args.mo_path
 
 
 def mod_organizer(app):
-    mo = os.path.join(FALLOUT_PATH, MOD_ORGANIZER[1])
-    application = os.path.join(FALLOUT_PATH, app[1])
+    drive, mo = os.path.splitdrive(MOD_ORGANIZER[1])
+    if drive is None:
+        mo = os.path.join(FALLOUT_PATH, MOD_ORGANIZER[1])
+    drive, application = os.path.splitdrive(app[1])
+    if drive is None:
+        application = os.path.join(FALLOUT_PATH, app[1])
     retval = application
-    if os.path.exists(mo) and app != MOD_ORGANIZER:
+    if os.path.exists(mo) and (app != MOD_ORGANIZER and
+                               app != FALLOUT_LAUNCHER):
             retval = (mo, '-p', args.profile, application)
     print retval
     return retval
@@ -108,29 +136,35 @@ Please install this to your Fallout 3 directory!
 
 Installation procedure:
     - Rename FalloutLauncher.exe to FalloutLauncher_ORG.exe
-    - Copy over falloutlauncher.exe, python27.dll and MSVCR90.dll to
-      your Fallout 3 directory
+    - Copy over falloutlauncher.exe your Fallout 3 directory
     - Run through steam :)
 '''
-        parser.print_help()
 
         sys.exit(1)
-    path = os.path.join(FALLOUT_PATH, app[1])
+    drive, path = os.path.splitdrive(app[1])
+    if drive is None:
+        path = os.path.join(FALLOUT_PATH, app[1])
     if os.path.exists(path):
-        path = mod_organizer(app)
+        if args.use_mo:
+            path = mod_organizer(app)
         print "Running {}".format(app[0])
-        subprocess.call(path)
+        subprocess.Popen(path)
         sys.exit(0)
     else:
         print "{} executable <{}> does not exist!".format(app[0], path)
+        parser.print_help()
         sys.exit(1)
 
 
 def user_input():
+    launcher_warning = ""
+    if args.use_mo:
+        launcher_warning = "(Only for configuration!)"
     print "Fallout 3 Launcher replacement"
     print
     print "<1>\tStart Fallout 3\t\t\t<{}>".format(FALLOUT[1])
-    print "<2>\tStart Fallout 3 Launcher\t<{}>".format(FALLOUT_LAUNCHER[1])
+    print "<2>\tStart Fallout 3 Launcher\t<{}> {}".format(FALLOUT_LAUNCHER[1],
+                                                          launcher_warning)
     print "<3>\tStart Fallout Script Extender\t<{}>".format(FOSE[1])
     print "<4>\tStart Mod Organizer\t\t<{}>".format(MOD_ORGANIZER[1])
     print "<ESC>\tQuit"
