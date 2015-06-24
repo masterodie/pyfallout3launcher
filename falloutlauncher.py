@@ -1,5 +1,5 @@
 """
-Fallout 3 Launcher Replacement
+pyFallout3 Launcher
 Copyright 2015 Patrick Neff
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,17 @@ except:
 
 FALLOUT_PATH = os.path.dirname(os.path.realpath(__file__))
 CONFIG_FILE = 'pyFallout3Launcher.conf'
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 def parse_configfile():
@@ -150,11 +161,11 @@ def mod_organizer(app):
         mo = os.path.join(FALLOUT_PATH, mo)
     drive, app = os.path.splitdrive(app)
     if drive is None:
-        application = os.path.join(FALLOUT_PATH, app)
+        app = os.path.join(FALLOUT_PATH, app)
     retval = app
     if os.path.exists(mo) and (app != args.mo_path and
-                               app != args.fo3_path):
-            retval = (mo, '-p', args.profile, application)
+                               app != args.launcher_path):
+            retval = (mo, '-p', args.profile, app)
     logging.debug(retval)
     return retval
 
@@ -193,11 +204,17 @@ class GUI(tk.Frame):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
+        self.logo = tk.PhotoImage(file=resource_path(
+            os.path.join('assets', 'img',
+                         'pyFallout3Launcher_Logo.gif')
+        ))
         self.titleLabel = ttk.Label(
             self,
-            text='Fallout 3 Launcher',
+            # text='pyFallout3 Launcher',
+            image=self.logo,
             font='Helvetica 14 bold'
         )
+        self.titleLabel.image = self.logo
         self.titleLabel.grid(pady=2, sticky=tk.N+tk.E+tk.W)
         self.fo3Button = ttk.Button(
             self,
@@ -237,22 +254,27 @@ class GUI(tk.Frame):
 
     def run_fo3(self):
         run_app(args.fo3_path)
+        self.quit()
 
     def run_launcher(self):
         run_app(args.launcher_path)
+        if not args.use_mo:
+            self.quit()
 
     def run_fose(self):
         run_app(args.fose_path)
+        self.quit()
 
     def run_mo(self):
         run_app(args.mo_path)
+        self.quit()
 
 
 def user_input():
     launcher_warning = ""
     if args.use_mo:
         launcher_warning = "(Only for configuration!)"
-    print "Fallout 3 Launcher replacement"
+    print "pyFallout3 Launcher"
     print
     print "<1>\tStart Fallout 3\t\t\t<{}>".format(args.fo3_path)
     print "<2>\tStart Fallout 3 Launcher\t<{}> {}".format(args.launcher_path,
@@ -265,13 +287,18 @@ def user_input():
     while True:
         choice = getch()
         if choice == "1":
-            run_app(args.fo3_path)
+            retval = run_app(args.fo3_path)
+            sys.exit(retval)
         elif choice == "2":
-            run_app(args.launcher_path)
+            retval = run_app(args.launcher_path)
+            if not args.use_mo:
+                sys.exit(retval)
         elif choice == "3":
-            run_app(args.fose_path)
+            retval = run_app(args.fose_path)
+            sys.exit(retval)
         elif choice == "4":
-            run_app(args.mo_path)
+            retval = run_app(args.mo_path)
+            sys.exit(retval)
         elif choice == chr(27):
             sys.exit(0)
 
@@ -291,7 +318,7 @@ def main():
             user_input()
         else:
             app = GUI()
-            app.master.title('Alternative Fallout 3 Launcher')
+            app.master.title('pyFallout3 Lauchner')
             app.mainloop()
 
 
