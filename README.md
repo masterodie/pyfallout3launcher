@@ -6,7 +6,7 @@ It is intended to be used together with Steam, so that the Steam ingame Overlay 
 
 ## Installation
 
-* Download the [ZIP file](https://github.com/masterodie/pyfallout3launcher/releases/download/v0.3/pyFallout3Launcher_0.3.zip)
+* Download the [ZIP file](https://github.com/masterodie/pyfallout3launcher/releases/download/v0.3.1/pyFallout3Launcher_0.3.1.zip)
 * In your Fallout 3 installation directory (e.g. C:\Program Files\Steam\SteamApps\common\Fallout 3 goty):
 * Rename `FalloutLauncher.exe` to `FalloutLauncher_ORG.exe`
 * Copy over `FalloutLauncher.exe` from the zip file
