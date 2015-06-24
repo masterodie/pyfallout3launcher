@@ -2,7 +2,7 @@
 
 This is a Fallout 3 launcher replacement.
 
-It is intended to be used together with Steam, so that the Steam ingame Overlay is usable and Steam counts ingame Time, while still using Mod Organizer for mod management.
+It is intended to be used together with Steam, so that the Steam ingame Overlay is usable and Steam counts ingame time, while still using Mod Organizer for mod management.
 
 ## Installation
 
