@@ -16,7 +16,7 @@ It is intended to be used together with Steam, so that the Steam ingame Overlay 
 * Launch the game through Steam
 * You can also add Launch parameters through Steam.
 
-        # Path Management
+        # Path Management (All paths can be realative to your Fallout3.exe or absolute.)
         --fo3-path PATH_TO_EXE
             The path to Fallout3.exe (Default: 'Fallout3.exe')
         --launcher-path PATH_TO_EXE
@@ -44,7 +44,7 @@ It is intended to be used together with Steam, so that the Steam ingame Overlay 
 ## Building
 
 * Install [Python 2.7 32 Bit](https://www.python.org)
-* Install `pywin32` from [sourceforge](http://sourceforge.net/projects/pywin32/
+* Install `pywin32` from [sourceforge](http://sourceforge.net/projects/pywin32/)
 * install pyinstaller with `pip install pyinstaller`
 * Build with `pyinstaller falloutlauncher.spec`
 * Files will be in `dist`
