@@ -24,6 +24,7 @@ import sys
 
 import Tkinter as tk
 import ttk
+import tkMessageBox
 
 try:
     from msvcrt import getch
@@ -170,7 +171,7 @@ def mod_organizer(app):
     return retval
 
 
-def run_app(app):
+def run_game(app):
     fallout = os.path.join(FALLOUT_PATH, args.fo3_path)
     if not os.path.exists(fallout):
         logging.error('{} Not found. Refer to README.md'.format(args.fo3_path))
@@ -212,62 +213,99 @@ class GUI(tk.Frame):
             self,
             # text='pyFallout3 Launcher',
             image=self.logo,
-            font='Helvetica 14 bold'
+            font='Helvetica 14 bold',
+            justify=tk.CENTER
         )
         self.titleLabel.image = self.logo
-        self.titleLabel.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.titleLabel.grid(columnspan=2, pady=2, sticky=tk.N+tk.E+tk.W)
+
         self.fo3Button = ttk.Button(
             self,
             text='Fallout 3',
             command=self.run_fo3,
             width=25
         )
-        self.fo3Button.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.fo3Button.grid(columnspan=2, pady=2, sticky=tk.N+tk.E+tk.W)
+
         self.launcherButton = ttk.Button(
             self,
             text='Fallout 3 Launcher',
             command=self.run_launcher,
             width=25
         )
-        self.launcherButton.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.launcherButton.grid(columnspan=2, pady=2, sticky=tk.N+tk.E+tk.W)
+
         self.foseButton = ttk.Button(
             self,
             text='Fallout Script Extender',
             command=self.run_fose,
             width=25
         )
-        self.foseButton.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.foseButton.grid(columnspan=2, pady=2, sticky=tk.N+tk.E+tk.W)
+
         self.moButton = ttk.Button(
             self,
             text='Mod Organizer',
             command=self.run_mo,
             width=25
         )
-        self.moButton.grid(pady=2, sticky=tk.N+tk.E+tk.W)
+        self.moButton.grid(columnspan=2, pady=2, sticky=tk.N+tk.E+tk.W)
+
+        self.optionsButton = ttk.Button(
+            self,
+            text='Options',
+            command=self.show_options,
+            width=15
+        )
+        self.optionsButton.grid(row=99, column=0, columnspan=1, padx=2, pady=2, sticky=tk.S+tk.E+tk.W)
+
         self.quitButton = ttk.Button(
             self,
             text='Quit',
             command=self.quit,
-            width=25
+            width=10
         )
-        self.quitButton.grid(pady=2, sticky=tk.S+tk.E+tk.W)
+        self.quitButton.grid(row=99, column=1, columnspan=1, padx=2, pady=2, sticky=tk.S+tk.E+tk.W)
 
     def run_fo3(self):
-        run_app(args.fo3_path)
+        self.run_game(args.fo3_path)
         self.quit()
 
     def run_launcher(self):
-        run_app(args.launcher_path)
+        self.run_game(args.launcher_path)
         if not args.use_mo:
             self.quit()
 
     def run_fose(self):
-        run_app(args.fose_path)
+        self.run_game(args.fose_path)
         self.quit()
 
     def run_mo(self):
-        run_app(args.mo_path)
+        self.run_game(args.mo_path)
         self.quit()
+
+    def run_game(self, game):
+        retval = run_game(game)
+        if retval == 0:
+            logging.debug('Execution of {} successful')
+        elif retval == 1:
+            title = 'Application missing'
+            message = 'The application is missing! ({0})'.format(game)
+            tkMessageBox.showerror(title, message)
+        elif retval == 2:
+            title = 'Install Error'
+            message = 'The game application is missing! ({0})\n' \
+                'Please install this to your Game directory.'.format(
+                    args.fo3_path
+                )
+            tkMessageBox.showerror(title, message)
+            self.quit()
+            sys.exit(retval)
+        else:
+            pass
+
+    def show_options(self):
+        tkMessageBox.showinfo('Not Implemented', 'Not implemented yet!')
 
 
 def user_input():
@@ -287,17 +325,17 @@ def user_input():
     while True:
         choice = getch()
         if choice == "1":
-            retval = run_app(args.fo3_path)
+            retval = run_game(args.fo3_path)
             sys.exit(retval)
         elif choice == "2":
-            retval = run_app(args.launcher_path)
+            retval = run_game(args.launcher_path)
             if not args.use_mo:
                 sys.exit(retval)
         elif choice == "3":
-            retval = run_app(args.fose_path)
+            retval = run_game(args.fose_path)
             sys.exit(retval)
         elif choice == "4":
-            retval = run_app(args.mo_path)
+            retval = run_game(args.mo_path)
             sys.exit(retval)
         elif choice == chr(27):
             sys.exit(0)
@@ -306,13 +344,13 @@ def user_input():
 def main():
 
     if args.fo3:
-        run_app(args.fo3_path)
+        run_game(args.fo3_path)
     elif args.launcher:
-        run_app(args.launcher_path)
+        run_game(args.launcher_path)
     elif args.fose:
-        run_app(args.fose_path)
+        run_game(args.fose_path)
     elif args.mo:
-        run_app(args.mo_path)
+        run_game(args.mo_path)
     else:
         if args.gui is False:
             user_input()
